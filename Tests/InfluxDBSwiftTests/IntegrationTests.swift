@@ -38,11 +38,15 @@ final class IntegrationTests: XCTestCase {
         let measurement = "h2o_\(Date().timeIntervalSince1970)"
 
         let points = Array(1...5).map {
-            InfluxDBClient.Point(measurement)
-                    .addTag(key: "host", value: "aws")
-                    .addTag(key: "location", value: "west")
-                    .addField(key: "value", value: .int($0))
-                    .time(time: .date(Date(2020, 7, $0)))
+            InfluxDBClient.Point(
+                measurement,
+                tags: [
+                    "host": "aws",
+                    "location": "west"
+                ],
+                fields: ["value": .int($0)],
+                time: .date(Date(2020, 7, $0))
+            )
         }
 
         client.makeWriteAPI().write(points: points) { _, error in
@@ -92,23 +96,35 @@ final class IntegrationTests: XCTestCase {
 
         let measurement = "h2o_\(Date().timeIntervalSince1970)"
 
-        let point1 = InfluxDBClient.Point(measurement)
-                .addTag(key: "host", value: "aws")
-                .addTag(key: "location", value: "west")
-                .addField(key: "value", value: .int(1))
-                .time(time: .date(Date(2020, 7, 1)))
+        let point1 = InfluxDBClient.Point(
+            measurement,
+            tags: [
+                "host": "aws",
+                "location": "west"
+            ],
+            fields: ["value": .int(1)],
+            time: .date(Date(2020, 7, 1))
+        )
 
-        let point2 = InfluxDBClient.Point(measurement)
-                .addTag(key: "host", value: "azure")
-                .addTag(key: "location", value: "west")
-                .addField(key: "value", value: .int(2))
-                .time(time: .date(Date(2020, 7, 2)))
+        let point2 = InfluxDBClient.Point(
+            measurement,
+            tags: [
+                "host": "azure",
+                "location": "west"
+            ],
+            fields: ["value": .int(2)],
+            time: .date(Date(2020, 7, 2))
+        )
 
-        let point3 = InfluxDBClient.Point(measurement)
-                .addTag(key: "host", value: "gc")
-                .addTag(key: "location", value: "west")
-                .addField(key: "value", value: .int(3))
-                .time(time: .date(Date(2020, 7, 3)))
+        let point3 = InfluxDBClient.Point(
+            measurement,
+            tags: [
+                "host": "gc",
+                "location": "west"
+            ],
+            fields: ["value": .int(3)],
+            time: .date(Date(2020, 7, 3))
+        )
 
         client.makeWriteAPI().write(points: [point1, point2, point3]) { _, error in
             if let error = error {

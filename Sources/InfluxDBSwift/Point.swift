@@ -8,62 +8,31 @@ extension InfluxDBClient {
     /// Point defines the values that will be written to the database.
     ///
     /// - SeeAlso: http://bit.ly/influxdata-point
-    public class Point {
+    public struct Point: Sendable {
         /// The measurement name.
-        private let measurement: String
+        public let measurement: String
         // The measurement tags.
-        private var tags: [String: String?] = [:]
+        public var tags: [String: String]
         // The measurement fields.
-        private var fields: [String: FieldValue?] = [:]
+        public var fields: [String: FieldValue]
         /// The data point time.
-        var time: TimestampValue?
+        public var time: TimestampValue?
 
         /// Create a new Point with specified a measurement name and precision.
         ///
         /// - Parameters:
         ///   - measurement: the measurement name
         ///   - precision: the data point precision
-        public init(_ measurement: String) {
+        public init(
+            _ measurement: String,
+            tags: [String: String] = [:],
+            fields: [String: FieldValue] = [:],
+            time: TimestampValue? = nil
+        ) {
             self.measurement = measurement
-        }
-
-        /// Adds or replaces a tag value for this point.
-        ///
-        /// - Parameters:
-        ///   - key: the tag name
-        ///   - value: the tag value
-        /// - Returns: self
-        @discardableResult
-        public func addTag(key: String?, value: String?) -> Point {
-            if let key = key {
-                tags[key] = value
-            }
-            return self
-        }
-
-        /// Adds or replaces a field value for this point.
-        ///
-        /// - Parameters:
-        ///   - key: the field name
-        ///   - value: the field value
-        /// - Returns: self
-        @discardableResult
-        public func addField(key: String?, value: FieldValue?) -> Point {
-            if let key = key {
-                fields[key] = value
-            }
-            return self
-        }
-
-        /// Updates the timestamp for the point.
-        ///
-        /// - Parameters:
-        ///   - time: the timestamp. It can be `Int` or `Date`.
-        /// - Returns: self
-        @discardableResult
-        public func time(time: TimestampValue) -> Point {
+            self.tags = tags
+            self.fields = fields
             self.time = time
-            return self
         }
 
         /// Creates Line Protocol from Data Point.
@@ -73,7 +42,7 @@ extension InfluxDBClient {
         ///   - defaultTags: default tags for Point.
         /// - Returns: Line Protocol
         public func toLineProtocol(precision: TimestampPrecision = defaultTimestampPrecision,
-                                   defaultTags: [String: String?]? = nil) throws -> String? {
+                                   defaultTags: [String: String]? = nil) throws -> String? {
             let meas = escapeKey(measurement, false)
             let tags = escapeTags(defaultTags)
             let fields = try escapeFields()
@@ -117,8 +86,8 @@ extension InfluxDBClient {
             return self
         }
 
-        internal func evaluate() -> [String: String?] {
-            let map: [String: String?] = tags.mapValues { value in
+        internal func evaluate() -> [String: String] {
+            let map: [String: String] = tags.compactMapValues { value in
                 if let value = value, value.starts(with: "${env.") {
                     let start = value.index(value.startIndex, offsetBy: 6)
                     let end = value.index(value.endIndex, offsetBy: -1)
@@ -134,7 +103,7 @@ extension InfluxDBClient {
 
 extension InfluxDBClient.Point {
     /// Possible value types of Field
-    public enum FieldValue {
+    public enum FieldValue: Sendable {
         /// Support for Int8
         init(_ value: Int8) {
             self = .int(Int(value))
@@ -185,7 +154,7 @@ extension InfluxDBClient.Point {
     }
 
     /// Possible value types of Field
-    public enum TimestampValue: CustomStringConvertible {
+    public enum TimestampValue: CustomStringConvertible, Sendable {
         // The number of ticks since the UNIX epoch. The value has to be specified with correct precision.
         case interval(Int, InfluxDBClient.TimestampPrecision = InfluxDBClient.defaultTimestampPrecision)
         // The date timestamp.
@@ -205,8 +174,8 @@ extension InfluxDBClient.Point {
 extension InfluxDBClient.Point {
     /// Tuple definition for construct `Point`.
     public typealias Tuple = (measurement: String,
-                              tags: [String?: String?]?,
-                              fields: [String?: InfluxDBClient.Point.FieldValue?],
+                              tags: [String: String]?,
+                              fields: [String: InfluxDBClient.Point.FieldValue],
                               time: InfluxDBClient.Point.TimestampValue?)
     /// Create a new Point from Tuple.
     ///
@@ -214,20 +183,13 @@ extension InfluxDBClient.Point {
     ///   - tuple: the tuple with keys: `measurement`, `tags`, `fields` and `time`
     ///   - precision: the data point precision
     /// - Returns: created Point
-    public class func fromTuple(_ tuple: Tuple) -> InfluxDBClient.Point {
-        let point = InfluxDBClient.Point(tuple.measurement)
-        if let tags = tuple.tags {
-            for tag in tags {
-                point.addTag(key: tag.0, value: tag.1)
-            }
-        }
-        for field in tuple.fields {
-            point.addField(key: field.0, value: field.1)
-        }
-        if let time = tuple.time {
-            point.time(time: time)
-        }
-        return point
+    public static func fromTuple(_ tuple: Tuple) -> InfluxDBClient.Point {
+        .init(
+            tuple.measurement,
+            tags: tuple.tags ?? [:],
+            fields: tuple.fields,
+            time: tuple.time
+        )
     }
 }
 
@@ -261,7 +223,7 @@ extension InfluxDBClient.Point {
         }
     }
 
-    private func escapeTags(_ defaultTags: [String: String?]?) -> String {
+    private func escapeTags(_ defaultTags: [String: String]?) -> String {
         tags
                 .merging(defaultTags ?? [:]) { current, _ in
                     current
@@ -272,11 +234,11 @@ extension InfluxDBClient.Point {
                     guard !keyValue.key.isEmpty else {
                         return
                     }
-                    if let value = keyValue.value, !value.isEmpty {
+                    if !keyValue.value.isEmpty {
                         result.append(",")
                         result.append(escapeKey(keyValue.key))
                         result.append("=")
-                        result.append(escapeKey(value))
+                        result.append(escapeKey(keyValue.value))
                     }
                 }
     }
@@ -288,10 +250,7 @@ extension InfluxDBClient.Point {
             if keyValue.key.isEmpty {
                 return
             }
-            guard let value = keyValue.value else {
-                return
-            }
-            if let escaped = try escapeValue(value) {
+            if let escaped = try escapeValue(keyValue.value) {
                 // key
                 result.append(escapeKey(keyValue.key))
                 // key=
@@ -384,5 +343,88 @@ extension InfluxDBClient.Point {
         }
 
         return " \(sinceEpoch)"
+    }
+}
+
+extension InfluxDBClient.Point {
+    /// Adds or replaces a tag value for this point.
+    ///
+    /// - Parameters:
+    ///   - key: the tag name
+    ///   - value: the tag value
+    /// - Returns: self
+    @_disfavoredOverload
+    @available(*, deprecated, message: "Pass tags to Point.init or use the tags property")
+    public func addTag(key: String?, value: String?) -> Self {
+        var point = self
+        if let key = key {
+            point.tags[key] = value
+        }
+        return point
+    }
+
+    /// Adds or replaces a tag value for this point.
+    ///
+    /// - Parameters:
+    ///   - key: the tag name
+    ///   - value: the tag value
+    /// - Returns: self
+    @available(*, deprecated, message: "Pass tags to Point.init or use the tags property")
+    public mutating func addTag(key: String?, value: String?) {
+        if let key = key {
+            tags[key] = value
+        }
+    }
+
+    /// Adds or replaces a field value for this point.
+    ///
+    /// - Parameters:
+    ///   - key: the field name
+    ///   - value: the field value
+    /// - Returns: self
+    @_disfavoredOverload
+    @available(*, deprecated, message: "Pass fields to Point.init or use the fields property")
+    public func addField(key: String?, value: FieldValue?) -> Self {
+        var point = self
+        if let key = key {
+            point.fields[key] = value
+        }
+        return point
+    }
+
+    /// Adds or replaces a field value for this point.
+    ///
+    /// - Parameters:
+    ///   - key: the field name
+    ///   - value: the field value
+    /// - Returns: self
+    @available(*, deprecated, message: "Pass fields to Point.init or use the fields property")
+    public mutating func addField(key: String?, value: FieldValue?) {
+        if let key = key {
+            fields[key] = value
+        }
+    }
+
+    /// Updates the timestamp for the point.
+    ///
+    /// - Parameters:
+    ///   - time: the timestamp. It can be `Int` or `Date`.
+    /// - Returns: self
+    @_disfavoredOverload
+    @available(*, deprecated, message: "Pass time to Point.init or use the time property")
+    public func time(time: TimestampValue) -> Self {
+        var point = self
+        point.time = time
+        return point
+    }
+
+    /// Updates the timestamp for the point.
+    ///
+    /// - Parameters:
+    ///   - time: the timestamp. It can be `Int` or `Date`.
+    /// - Returns: self
+    @available(*, deprecated, message: "Pass time to Point.init or use the time property")
+    public mutating func time(time: TimestampValue) {
+        self.time = time
     }
 }

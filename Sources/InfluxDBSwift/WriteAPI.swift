@@ -801,7 +801,7 @@ public struct WriteAPI {
 
     private func toLineProtocol(precision: InfluxDBClient.TimestampPrecision,
                                 any: Any,
-                                defaultTags: [String: String?]?,
+                                defaultTags: [String: String]?,
                                 lps: inout [String]) throws {
         // To avoid: "Could not cast value of type 'InfluxDBSwift.InfluxDBClient.Point' to 'Foundation.NSObject'."
         // on Linux - see:
@@ -831,7 +831,7 @@ public struct WriteAPI {
 
     private func toLineProtocol(precision: InfluxDBClient.TimestampPrecision,
                                 point: InfluxDBClient.Point,
-                                defaultTags: [String: String?]?,
+                                defaultTags: [String: String]?,
                                 lps: inout [String]) throws {
         if let lineProtocol = try point.toLineProtocol(precision: precision, defaultTags: defaultTags) {
             return toLineProtocol(

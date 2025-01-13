@@ -1,4 +1,14 @@
-## 1.8.0 [unreleased]
+## 2.0.0 [unreleased]
+
+`Point` has been updated from a class to a `Sendable` struct. This allows passing instances of `Point` across arbitrary concurrent contexts without introducing a risk of data races. Anywhere using `Point` will need to be updated to account for the change from a class to a struct.
+
+The minimum swift version has been raised to 5.7 to support the `Sendable` protocol.
+
+`addTag(key:value:)`, `addField(key:value:)`, and `time(time:)` have been deprecated in favor of passing values to `Point.init` or mutating the properties directly. Since the methods mutated the instance and returned the instance, they aren't compatible with `Point` becoming a struct. To simplify migration, each method now has two versions: one that mutates the instance and one that returns a new modified instance. The methods returning a new instance can still be chained together but the result must be assigned to a variable. The methods that mutate the instance can no longer be chained together, but don't require assigning the result to a variable.
+
+### Features
+1. [#69](https://github.com/influxdata/influxdb-client-swift/pull/69) Updated `Point` to be a sendable struct
+1. [#70](https://github.com/influxdata/influxdb-client-swift/pull/70): Improved usability of `Point` by adding tags, fields, and time to the initializer and making the properties public and mutable
 
 ## 1.7.0 [2024-05-17]
 

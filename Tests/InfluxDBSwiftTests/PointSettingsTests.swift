@@ -39,8 +39,7 @@ final class PointSettingsTests: XCTestCase {
                 .addDefaultTag(key: "not_exist", value: "${env.NOT_EXIST_KEY}")
 
         XCTAssertEqual([
-            "id": "132-987-655",
-            "not_exist": nil
+            "id": "132-987-655"
         ], defaultTags.evaluate())
     }
 
@@ -50,8 +49,7 @@ final class PointSettingsTests: XCTestCase {
                 .addDefaultTag(key: "nil", value: nil)
 
         XCTAssertEqual([
-            "id": "132-987-655",
-            "nil": nil
+            "id": "132-987-655"
         ], defaultTags.evaluate())
     }
 }

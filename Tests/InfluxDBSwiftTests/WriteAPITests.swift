@@ -63,9 +63,12 @@ final class WriteAPITests: XCTestCase {
 
         MockURLProtocol.handler = simpleWriteHandler(expectation: expectation)
 
-        let point = InfluxDBClient.Point("mem")
-                .addTag(key: "tag", value: "a")
-                .addField(key: "value", value: .int(1))
+        let point = InfluxDBClient.Point(
+            "mem",
+            tags: ["tag": "a"],
+            fields: ["value": .int(1)]
+        )
+
         client.makeWriteAPI().write(point: point) { response, error in
             if let error = error {
                 XCTFail("Error occurs: \(error)")
@@ -97,14 +100,19 @@ final class WriteAPITests: XCTestCase {
             return (response, Data())
         }
 
-        let point1 = InfluxDBClient.Point("mem")
-                .addTag(key: "tag", value: "a")
-                .addField(key: "value", value: .int(1))
-                .time(time: .interval(1, .s))
-        let point2 = InfluxDBClient.Point("mem")
-                .addTag(key: "tag", value: "b")
-                .addField(key: "value", value: .int(2))
-                .time(time: .interval(2, .ns))
+        let point1 = InfluxDBClient.Point(
+            "mem",
+            tags: ["tag": "a"],
+            fields: ["value": .int(1)],
+            time: .interval(1, .s)
+        )
+
+        let point2 = InfluxDBClient.Point(
+            "mem",
+            tags: ["tag": "b"],
+            fields: ["value": .int(2)],
+            time: .interval(2, .ns)
+        )
 
         client.makeWriteAPI().write(points: [point1, point2]) { _, _ in
             expectation.fulfill()
@@ -135,12 +143,18 @@ final class WriteAPITests: XCTestCase {
             return (response, Data())
         }
 
-        let point1 = InfluxDBClient.Point("mem")
-                .addTag(key: "tag", value: "a")
-                .addField(key: "value", value: .int(1))
-        let point2 = InfluxDBClient.Point("mem")
-                .addTag(key: "tag", value: "b")
-                .addField(key: "value", value: .int(2))
+        let point1 = InfluxDBClient.Point(
+            "mem",
+            tags: ["tag": "a"],
+            fields: ["value": .int(1)]
+        )
+
+        let point2 = InfluxDBClient.Point(
+            "mem",
+            tags: ["tag": "b"],
+            fields: ["value": .int(2)]
+        )
+
         client.makeWriteAPI().write(points: [point1, point2]) { response, error in
             if let error = error {
                 XCTFail("Error occurs: \(error)")
@@ -236,9 +250,12 @@ final class WriteAPITests: XCTestCase {
                 fields: ["value": .int(3)],
                 time: .interval(3)
         )
-        let point = InfluxDBClient.Point("mem")
-                .addTag(key: "tag", value: "a")
-                .addField(key: "value", value: .int(2))
+
+        let point = InfluxDBClient.Point(
+            "mem",
+            tags: ["tag": "a"],
+            fields: ["value": .int(2)]
+        )
 
         client.makeWriteAPI().write(records: [record]) { _, error in
             if let error = error {
@@ -391,9 +408,12 @@ final class WriteAPITests: XCTestCase {
         }
 
         let record = "mem,tag=a value=1"
-        let point = InfluxDBClient.Point("mem")
-                .addTag(key: "tag", value: "a")
-                .addField(key: "value", value: .int(2))
+        let point = InfluxDBClient.Point(
+            "mem",
+            tags: ["tag": "a"],
+            fields: ["value": .int(2)]
+        )
+
         let tuple: InfluxDBClient.Point.Tuple
                 = (measurement: "mem", tags: ["tag": "a"], fields: ["value": .int(3)], time: nil)
 
@@ -456,9 +476,11 @@ final class WriteAPITests: XCTestCase {
         // record
         try await client.makeWriteAPI().write(record: "mem,tag=a value=1i")
         // point
-        let point = InfluxDBClient.Point("mem")
-                .addTag(key: "tag", value: "a")
-                .addField(key: "value", value: .int(1))
+        let point = InfluxDBClient.Point(
+            "mem",
+            tags: ["tag": "a"],
+            fields: ["value": .int(1)]
+        )
         try await client.makeWriteAPI().write(point: point)
         // tuple
         let tuple: InfluxDBClient.Point.Tuple = (

@@ -105,7 +105,6 @@ extension PointTests {
         ("testDescription", testDescription),
         ("testEqualSignEscaping", testEqualSignEscaping),
         ("testFieldEscape", testFieldEscape),
-        ("testFieldNullValue", testFieldNullValue),
         ("testFieldTypes", testFieldTypes),
         ("testFromTuple", testFromTuple),
         ("testInfinityValues", testInfinityValues),

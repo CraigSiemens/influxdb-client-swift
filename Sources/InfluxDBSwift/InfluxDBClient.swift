@@ -24,7 +24,7 @@ import FoundationNetworking
 /// ````
 public struct InfluxDBClient {
     /// Version of client.
-    public static var version: String = "1.8.0dev"
+    public static var version: String = "2.0.0dev"
     /// InfluxDB host and port.
     public let url: String
     /// Authentication token.
@@ -247,7 +247,7 @@ extension InfluxDBClient {
 
     /// An enum represents the precision for the unix timestamps within the body line-protocol.
     /// - SeeAlso: https://docs.influxdata.com/influxdb/latest/write-data/#timestamp-precision
-    public enum TimestampPrecision: String, Codable, CaseIterable {
+    public enum TimestampPrecision: String, Codable, CaseIterable, Sendable {
         /// Milliseconds
         case ms
         /// Seconds
