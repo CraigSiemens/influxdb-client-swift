@@ -32,10 +32,13 @@ extension RecordRow {
         // Write test data into InfluxDB
         //
         for i in 1...5 {
-            let point = InfluxDBClient
-                    .Point("point")
-                    .addField(key: "table", value: .string("my-table"))
-                    .addField(key: "result", value: .double(Double(i)))
+            let point = InfluxDBClient.Point(
+                "point",
+                fields: [
+                    "table": .string("my-table"),
+                    "result": .double(Double(i)),
+                ]
+            )
             try await client.makeWriteAPI().write(point: point)
         }
 

@@ -35,18 +35,20 @@ extension WriteData {
         //
         // Record defined as Data Point
         //
-        let recordPoint = InfluxDBClient
-                .Point("demo")
-                .addTag(key: "type", value: "point")
-                .addField(key: "value", value: .int(2))
+        let recordPoint = InfluxDBClient.Point(
+            "demo",
+            tags: ["type": "point"],
+            fields: ["value": .int(2)]
+        )
         //
         // Record defined as Data Point with Timestamp
         //
-        let recordPointDate = InfluxDBClient
-                .Point("demo")
-                .addTag(key: "type", value: "point-timestamp")
-                .addField(key: "value", value: .int(2))
-                .time(time: .date(Date()))
+        let recordPointDate = InfluxDBClient.Point(
+            "demo",
+            tags: ["type": "point-timestamp"],
+            fields: ["value": .int(2)],
+            time: .date(Date())
+        )
 
         try await client.makeWriteAPI().write(points: [recordPoint, recordPointDate])
         print("Written data:\n\n\([recordPoint, recordPointDate].map { "\t- \($0)" }.joined(separator: "\n"))")

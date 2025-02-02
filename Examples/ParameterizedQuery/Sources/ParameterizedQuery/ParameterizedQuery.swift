@@ -32,10 +32,11 @@ extension ParameterizedQuery {
                 options: InfluxDBClient.InfluxDBOptions(bucket: bucket, org: org))
 
         for index in 1...3 {
-            let point = InfluxDBClient
-                    .Point("demo")
-                    .addTag(key: "type", value: "point")
-                    .addField(key: "value", value: .int(index))
+            let point = InfluxDBClient.Point(
+                "demo",
+                tags: ["type": "point"],
+                fields: ["value": .int(index)]
+            )
             try await client.makeWriteAPI().write(point: point)
         }
 

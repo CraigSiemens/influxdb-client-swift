@@ -35,10 +35,11 @@ extension AsyncAwait {
         //
         // Asynchronous write
         //
-        let point = InfluxDBClient
-                .Point("demo")
-                .addTag(key: "type", value: "point")
-                .addField(key: "value", value: .int(2))
+        let point = InfluxDBClient.Point(
+            "demo",
+            tags: ["type": "point"],
+            fields: ["value": .int(2)]
+        )
         try await client.makeWriteAPI().write(point: point)
         print("Written data:\n > \(try point.toLineProtocol())")
 

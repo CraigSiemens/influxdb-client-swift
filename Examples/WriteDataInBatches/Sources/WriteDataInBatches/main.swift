@@ -86,14 +86,17 @@ struct WriteDataInBatches: ParsableCommand {
     ///   - dateFormatter: for parsing date
     /// - Returns: parsed InfluxDBClient.Point
     private func toPoint(row: [String], dateFormatter: DateFormatter) -> InfluxDBClient.Point {
-        InfluxDBClient
-                .Point("financial-analysis")
-                .addTag(key: "type", value: "vix-daily")
-                .addField(key: "open", value: .double(Double(row[1])!))
-                .addField(key: "high", value: .double(Double(row[2])!))
-                .addField(key: "low", value: .double(Double(row[3])!))
-                .addField(key: "close", value: .double(Double(row[4])!))
-                .time(time: .date(dateFormatter.date(from: row[0])!))
+        InfluxDBClient.Point(
+            "financial-analysis",
+            tags: ["type": "vix-daily"],
+            fields: [
+                "open": .double(Double(row[1])!),
+                "high": .double(Double(row[2])!),
+                "low": .double(Double(row[3])!),
+                "close": .double(Double(row[4])!)
+            ],
+            time: .date(dateFormatter.date(from: row[0])!)
+        )
     }
 
     private func atExit(client: InfluxDBClient, error: InfluxDBClient.InfluxDBError? = nil) {

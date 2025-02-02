@@ -56,7 +56,7 @@ InfluxDB 2.x client consists of two packages
 
 ## Supported Platforms
 
-This package requires Swift 5 and Xcode 12+.
+This package requires Swift 5.7 and Xcode 14+.
 
 - iOS 14.0+
 - macOS 11.0+
@@ -70,24 +70,24 @@ This package requires Swift 5 and Xcode 12+.
 
 Add this line to your `Package.swift` :
 
-~~~swift
-// swift-tools-version:5.3
+```swift
+// swift-tools-version:5.7
 import PackageDescription
 
 let package = Package(
     name: "MyPackage",
     dependencies: [
-        .package(name: "influxdb-client-swift", url: "https://github.com/influxdata/influxdb-client-swift", from: "1.7.0"),
+        .package(name: "influxdb-client-swift", url: "https://github.com/influxdata/influxdb-client-swift", from: "2.0.0"),
     ],
     targets: [
         .target(name: "MyModule", dependencies: [
-          .product(name: "InfluxDBSwift", package: "influxdb-client-swift"),
-          // or InfluxDBSwiftApis for management API
-          .product(name: "InfluxDBSwiftApis", package: "influxdb-client-swift")
+            .product(name: "InfluxDBSwift", package: "influxdb-client-swift"),
+            // or InfluxDBSwiftApis for management API
+            .product(name: "InfluxDBSwiftApis", package: "influxdb-client-swift")
         ])
     ]
 )
-~~~
+```
 
 ## Usage
 
@@ -187,25 +187,27 @@ extension WriteData {
     // Initialize Client with default Bucket and Organization
     //
     let client = InfluxDBClient(
-            url: url,
-            token: token,
-            options: InfluxDBClient.InfluxDBOptions(bucket: bucket, org: org))
-
+      url: url,
+      token: token,
+      options: InfluxDBClient.InfluxDBOptions(bucket: bucket, org: org)
+    )
     //
     // Record defined as Data Point
     //
-    let recordPoint = InfluxDBClient
-            .Point("demo")
-            .addTag(key: "type", value: "point")
-            .addField(key: "value", value: .int(2))
+    let recordPoint = InfluxDBClient.Point(
+        "demo",
+        tags: ["type": "point"],
+        fields: ["value": .int(2)]
+    )
     //
     // Record defined as Data Point with Timestamp
     //
-    let recordPointDate = InfluxDBClient
-            .Point("demo")
-            .addTag(key: "type", value: "point-timestamp")
-            .addField(key: "value", value: .int(2))
-            .time(time: .date(Date()))
+    let recordPointDate = InfluxDBClient.Point(
+      "demo",
+      tags: ["type": "point-timestamp"],
+      fields: ["value": .int(2)],
+      time: .date(Date())
+    )
 
     try await client.makeWriteAPI().write(points: [recordPoint, recordPointDate])
     print("Written data:\n\n\([recordPoint, recordPointDate].map { "\t- \($0)" }.joined(separator: "\n"))")
@@ -375,10 +377,11 @@ extension ParameterizedQuery {
             options: InfluxDBClient.InfluxDBOptions(bucket: bucket, org: org))
 
     for index in 1...3 {
-      let point = InfluxDBClient
-              .Point("demo")
-              .addTag(key: "type", value: "point")
-              .addField(key: "value", value: .int(index))
+      let point = InfluxDBClient.Point(
+        "demo",
+        tags: ["type": "point"],
+        fields: ["value", value: .int(index)]
+      )
       try await client.makeWriteAPI().write(point: point)
     }
 
@@ -602,9 +605,11 @@ let tuple: InfluxDBClient.Point.Tuple
         = (measurement: "mem", tags: ["tag": "a"], fields: ["value": .int(3)], time: nil)
 
 let records: [Any] = [
-        InfluxDBClient.Point("mining")
-                .addTag(key: "sensor_state", value: "normal")
-                .addField(key: "depth", value: .int(2)),
+        InfluxDBClient.Point(
+          "mining",
+          tags: ["sensor_state": "normal"],
+                fields: ["depth": .int(2)]
+        ),
         tuple
 ]
 

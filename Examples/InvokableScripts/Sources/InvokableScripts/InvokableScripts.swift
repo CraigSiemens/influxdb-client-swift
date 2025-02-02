@@ -37,14 +37,16 @@ extension InvokableScriptsAPI {
         //
         // Prepare Data
         //
-        let point1 = InfluxDBClient
-                .Point("my_measurement")
-                .addTag(key: "location", value: "Prague")
-                .addField(key: "temperature", value: .double(25.3))
-        let point2 = InfluxDBClient
-                .Point("my_measurement")
-                .addTag(key: "location", value: "New York")
-                .addField(key: "temperature", value: .double(24.3))
+        let point1 = InfluxDBClient.Point(
+            "my_measurement",
+            tags: ["location": "Prague"],
+            fields: ["temperature": .double(25.3)]
+        )
+        let point2 = InfluxDBClient.Point(
+            "my_measurement",
+            tags: ["location": "New York"],
+            fields: ["temperature": .double(24.3)]
+        )
         try await client.makeWriteAPI().write(points: [point1, point2])
 
         //
